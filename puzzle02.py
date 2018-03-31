@@ -15,6 +15,7 @@ redMart = redMart.drop(['len','wid','hei'],axis=1)
 #     redMart table columns - ProductId(0),Price(1),Weight(2),Volume(3)
 volSort = redMart.sort_values(by=['vol'],ascending=True).values
 priSort = redMart.sort_values(by=['price'],ascending=False).values
+highCartPrice = priSort[0][1]
 maxRange = len(volSort)
 # add seq's total volume and compare with tote Volume
 def calcVol(seq,volSort,carts,highValuecart,minSeq,cartVol,cartPri,cart):
@@ -51,6 +52,8 @@ def recur(t,seq,minSeq,cartVol,cartPri,cart):
 #    print(seq)
     brk = False
     if t == len(seq)-1:
+        if (cartPri[0]+highCartPrice-volSort[seq[t]][1]) < highValuecart[0]:
+            return minSeq,brk
         while seq[t] < maxRange-1:
             if cartPri[0] >= highValuecart[0]:
                 minSeq,brk = calcVol(seq,volSort,carts,highValuecart,minSeq,cartVol,cartPri,cart)
@@ -92,6 +95,8 @@ def recur(t,seq,minSeq,cartVol,cartPri,cart):
                         cartVol[0] -= volSort[seq[t+1]][3]
                         cartPri[0] -= volSort[seq[t+1]][1]
                         seq.pop()
+                        if (cartPri[0]+highCartPrice-volSort[seq[t]][1]) < highValuecart[0]:
+                            return minSeq,brk                            
                         while seq[t] < maxRange-1:
                             if cartPri[0] >= highValuecart[0]:
                                 minSeq,brk = calcVol(seq,volSort,carts,highValuecart,minSeq,cartVol,cartPri,cart)
@@ -127,11 +132,10 @@ for i in range(0,maxRange):
 #find max products require to fill toteVol
     for j in range(i,maxRange):
         cartVol[0] += volSort[j][3]
-        maxCombi += 1
         if cartVol[0] > toteVol:
-            maxCombi -= 1
             print(f"Max {maxCombi} products required to fill TOTE in Sequence: {i} and minimum Sequence is: {minSeq}")
             break
+        maxCombi += 1
     if (i+maxCombi) < maxRange:
         maxSeq = maxCombi
     else:
@@ -147,7 +151,7 @@ for i in range(0,maxRange):
             minSeq,brk = calcVol(seq,volSort,carts,highValuecart,minSeq,cartVol,cartPri,cart)
 #        print(seq,brk,minSeq)
         for j in range(maxSeq-1,0,-1):
-            print("Iteration: {}, Minseq: {} ".format(j,minSeq))
+#            print("Iteration: {}, Minseq: {} ".format(j,minSeq))
             seq = deque(range(i,i+maxSeq))
             seq[j] += 1
             for k in range(j+1,maxSeq):
